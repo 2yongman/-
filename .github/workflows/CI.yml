@@ -9,10 +9,10 @@ on:
     branches: [ main ]  # main branch로 pull request될 때 실행됩니다.
 
 env:
-  AWS_REGION: ap-northeast-2
-  AWS_S3_BUCKET: app-release-files
-  AWS_CODE_DEPLOY_APPLICATION: rentbook-CD
-  AWS_CODE_DEPLOY_GROUP: rentbook-CD-group
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+  AWS_CODE_DEPLOY_APPLICATION: ${{ secrets.AWS_CODE_DEPLOY_APPLICATION }}
+  AWS_CODE_DEPLOY_GROUP: ${{ secrets.AWS_CODE_DEPLOY_GROUP }}
 
 
 # workflow는 한개 이상의 job을 가지며, 각 job은 여러 step에 따라 단계를 나눌 수 있습니다.
