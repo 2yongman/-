@@ -8,6 +8,13 @@ on:
   pull_request:
     branches: [ main ]  # main branch로 pull request될 때 실행됩니다.
 
+env:
+  AWS_REGION: ap-northeast-2
+  AWS_S3_BUCKET: app-release-files
+  AWS_CODE_DEPLOY_APPLICATION: rentbook-CD
+  AWS_CODE_DEPLOY_GROUP: rentbook-CD-group
+
+
 # workflow는 한개 이상의 job을 가지며, 각 job은 여러 step에 따라 단계를 나눌 수 있습니다.
 jobs:
   build:
@@ -31,3 +38,23 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
         shell: bash
+
+      - name: Run chomod to make gradlew executable
+        run: chmod +x ./gradlew
+
+      # build 후 프로젝트 압축
+      - name: 프로젝트 빌드
+        run: ./gradlew clean build -x test
+
+      - name: AWS credential 설정
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          aws-access-key-id: ${{ AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ AWS_SECRET_ACCESS_KEY }}
+
+      # 압축한 프로젝트 S3로 전송
+      - name: S3 업로드
+        run: aws deploy push --application-name ${{ env.AWS_CODE_DEPLOY_APPLICATION }} --ignore-hidden-files --s3-location s3://$AWS_S3_BUCKET/MyRentBook/$GITHUB_SHA.zip --source .
+      - name: EC2 배포
+        run: aws deploy create-deployment --application-name ${{ env.AWS_CODE_DEPLOY_APPLICATION }} --deployment-config-name CodeDeployDefault.AllAtOnce --deployment-group-name ${{ env.AWS_CODE_DEPLOY_GROUP }} --s3-location bucket=$AWS_S3_BUCKET,key=MyRentBook/$GITHUB_SHA.zip,bundleType=zip
